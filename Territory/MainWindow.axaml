@@ -3,47 +3,108 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Territory"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="700"
         x:Class="Territory.MainWindow"
         x:DataType="local:MainWindow"
+        x:Name="Root"
         Title="Territory"
-        Width="400"
-        Height="450">
+        Width="600"
+        Height="700"
+        Background="#121212">
 
         <Window.Resources>
                 <local:ColourConverter x:Key="ColourConverter"/>
         </Window.Resources>
 
-        <StackPanel>
-                <Border Margin="5" CornerRadius="10" Background="Gray">
-                        <TextBlock Margin="5" FontSize="24" HorizontalAlignment="Center" Text="Territory"></TextBlock>
+        <Window.Styles>
+                <Style Selector="TextBox">
+                        <Setter Property="Background" Value="#FFFFFF"/>
+                        <Setter Property="Foreground" Value="#1A1A1A"/>
+                        <Setter Property="BorderBrush" Value="#3A3A3A"/>
+                        <Setter Property="CaretBrush" Value="#1A1A1A"/>
+                </Style>
+                <Style Selector="TextBox:focus">
+                        <Setter Property="Background" Value="#FFFFFF"/>
+                        <Setter Property="Foreground" Value="#1A1A1A"/>
+                        <Setter Property="BorderBrush" Value="#1A7F3A"/>
+                        <Setter Property="CaretBrush" Value="#1A1A1A"/>
+                </Style>
+        </Window.Styles>
+
+        <StackPanel Spacing="0">
+                <!-- Header -->
+                <Border Margin="0" Padding="20" Background="#1A1A1A" BorderBrush="#2A2A2A" BorderThickness="0,0,0,1">
+                        <TextBlock FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" Text="TERRITORY" Foreground="#FFFFFF"/>
                 </Border>
-                
-                <TextBlock Margin="5" FontSize="15" Text="Binding Player to move"></TextBlock>
-                
-                <Grid ShowGridLines="False" Margin="5" ColumnDefinitions="300 100" RowDefinitions="Auto">
-                        <ItemsControl Name="BoardGrid" Grid.Column="0" Grid.Row="0" ItemsSource="{Binding Board.Cells}">
-                                <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                                <WrapPanel></WrapPanel>
-                                        </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                
-                                <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="local:Cell">
-                                                <Button Width="50" Height="50" Margin="1" 
-                                                        Click="CellCLick" 
-                                                        Tag="{Binding}">
-                                                </Button>
-                                        </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        
-                        <StackPanel Grid.Column="1" Grid.Row="0">
-                                <Button Width="50" Margin="10">Play</Button>
-                                <Button Width="50" Margin="10">Save</Button>
-                                <Button Width="50" Margin="10">Load</Button>
+
+                <Border Padding="25">
+                        <StackPanel Spacing="20">
+                                <!-- Game Status Area -->
+                                <Border Padding="20" Background="#1E1E1E" BorderBrush="#3A3A3A" BorderThickness="2" MinHeight="70" IsVisible="{Binding StatusVisible}">
+                                        <TextBlock FontSize="18" FontWeight="Bold" Text="{Binding StatusMessage}" Foreground="{Binding CurrentPlayerBrush}" TextAlignment="Center" VerticalAlignment="Center" Margin="0"/>
+                                </Border>
+
+                                <!-- Config Panel -->
+                                <StackPanel Spacing="15" Name="ConfigPanel">
+                                        <TextBlock FontSize="13" FontWeight="SemiBold" Text="NEW GAME" Foreground="#AAAAAA"/>
+                                        <StackPanel Spacing="12">
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                        <TextBlock VerticalAlignment="Center" Width="70" Text="Rows:" FontSize="12" Foreground="#CCCCCC"/>
+                                                        <TextBox Name="RowsBox" Width="50" Text="{Binding Rows, Mode=TwoWay}" Padding="8,6" Foreground="#1A1A1A" Background="#FFFFFF" FontSize="12" BorderBrush="#3A3A3A" BorderThickness="1"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                        <TextBlock VerticalAlignment="Center" Width="70" Text="Columns:" FontSize="12" Foreground="#CCCCCC"/>
+                                                        <TextBox Name="ColsBox" Width="50" Text="{Binding Columns, Mode=TwoWay}" Padding="8,6" Foreground="#1A1A1A" Background="#FFFFFF" FontSize="12" BorderBrush="#3A3A3A" BorderThickness="1"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                        <TextBlock VerticalAlignment="Center" Width="70" Text="Players:" FontSize="12" Foreground="#CCCCCC"/>
+                                                        <ComboBox Name="PlayersBox" Width="80" SelectedItem="{Binding PlayerCount, Mode=TwoWay}" ItemsSource="{Binding PlayerCountOptions}"/>
+                                                </StackPanel>
+                                        </StackPanel>
+                                        <Button Content="START GAME" Click="Play_Click" Padding="12,10" FontSize="12" FontWeight="SemiBold" Background="#2A6F39" Foreground="White" BorderThickness="0"/>
+
+                                        <!-- Player Setup -->
+                                        <StackPanel Spacing="8" Margin="0,12,0,0">
+                                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="#AAAAAA" Text="Player Setup"/>
+                                                <ItemsControl ItemsSource="{Binding Players}">
+                                                        <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                                                <TextBlock Width="24" Text="" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+                                                                                <TextBox Width="140" Watermark="Name" Text="{Binding Name, Mode=TwoWay}"/>
+                                                                                <ComboBox Width="120" SelectedItem="{Binding Color, Mode=TwoWay}" ItemsSource="{Binding DataContext.ColorOptions, ElementName=Root}">
+                                                                                        <ComboBox.ItemTemplate>
+                                                                                                <DataTemplate>
+                                                                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                                                <Border Width="14" Height="14" Background="{Binding Converter={StaticResource ColourConverter}}" BorderBrush="#3A3A3A" BorderThickness="1"/>
+                                                                                                                <TextBlock Text="{Binding}" Foreground="#E0E0E0"/>
+                                                                                                        </StackPanel>
+                                                                                                </DataTemplate>
+                                                                                        </ComboBox.ItemTemplate>
+                                                                                </ComboBox>
+                                                                                <Border Width="20" Height="20" CornerRadius="3" Background="{Binding Color, Converter={StaticResource ColourConverter}}" BorderBrush="#3A3A3A" BorderThickness="1"/>
+                                                                        </StackPanel>
+                                                                </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                        </StackPanel>
+                                </StackPanel>
+
+                                <!-- Restart Button -->
+                                <Button Name="RestartButton" Content="RESTART GAME" Click="Restart_Click" IsVisible="False" Padding="12,10" FontSize="12" FontWeight="SemiBold" Background="#C84C3A" Foreground="White" BorderThickness="0"/>
+
+                                <!-- Board and Controls -->
+                                <Grid ColumnDefinitions="* Auto" ColumnSpacing="20">
+                                        <Border Grid.Column="0" Background="#1E1E1E" BorderBrush="#2A2A2A" BorderThickness="1" Padding="8">
+                                                <Grid Name="BoardGrid" IsVisible="False" Width="350" Height="350"/>
+                                        </Border>
+                                        
+                                        <StackPanel Grid.Column="1" Spacing="10" VerticalAlignment="Top">
+                                                <Button Content="SAVE" Click="SaveGame" Padding="12,10" Width="90" FontSize="11" FontWeight="SemiBold" Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#2A2A2A" BorderThickness="1"/>
+                                                <Button Content="LOAD" Click="LoadGame" Padding="12,10" Width="90" FontSize="11" FontWeight="SemiBold" Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#2A2A2A" BorderThickness="1"/>
+                                        </StackPanel>
+                                </Grid>
                         </StackPanel>
-                </Grid>
+                </Border>
         </StackPanel>
 </Window>
