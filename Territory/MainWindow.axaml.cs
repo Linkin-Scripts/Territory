@@ -36,6 +36,7 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
     // players
     private Player _currentPlayer = new Player("1");
     public ObservableCollection<Player> Players { get; set; } = new ObservableCollection<Player>();
+    public List<Player> CurrentPlayers { get; set; }
     public List<string> ColorOptions { get; set; } = new List<string>();
     public List<int> PlayerCountOptions { get; set; } = new List<int> { 2, 3, 4, 5 };
 
@@ -119,6 +120,7 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
         }
 
         Players = new ObservableCollection<Player>(newList);
+        CurrentPlayers = newList;
         // subscribe to property changes for uniqueness enforcement
         _lastColor.Clear();
         foreach (var p in Players)
@@ -195,8 +197,11 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
                 UpdateStatus();
                 return true;
             }
+            else
+            {
+                CurrentPlayers.Remove(Players[Turn]);
+            }
         }
-
         return false;
     }
 
@@ -218,6 +223,13 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
             brush = winnerStatus.Brush;
             return true;
         }
+        if (CurrentPlayers.Count == 1)
+        {
+            var winnerStatus = BuildWinnerStatus();
+            message = winnerStatus.Message;
+            brush = winnerStatus.Brush;
+            return true;
+        }
 
         message = string.Empty;
         brush = Brushes.LightGray;
@@ -226,7 +238,7 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
 
     private (string Message, IBrush Brush) BuildWinnerStatus()
     {
-        var counts = Players.ToDictionary(p => p, p => Board.Cells.Count(c => c.Owner == p));
+        var counts = CurrentPlayers.ToDictionary(p => p, p => Board.Cells.Count(c => c.Owner == p));
         var max = counts.Values.Max();
         var winners = counts.Where(kv => kv.Value == max).Select(kv => kv.Key.Name).ToList();
         if (winners.Count == 1)
