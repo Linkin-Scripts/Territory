@@ -36,7 +36,7 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
     // players
     private Player _currentPlayer = new Player("1");
     public ObservableCollection<Player> Players { get; set; } = new ObservableCollection<Player>();
-    public List<Player> CurrentPlayers { get; set; }
+    private List<Player> _eliminatedPlayers { get; set; } = new();
     public List<string> ColorOptions { get; set; } = new List<string>();
     public List<int> PlayerCountOptions { get; set; } = new List<int> { 2, 3, 4, 5 };
 
@@ -141,7 +141,7 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
         }
 
         Players = new ObservableCollection<Player>(newList);
-        CurrentPlayers = newList;
+        _eliminatedPlayers.Clear();
         // subscribe to property changes for uniqueness enforcement
         _lastColor.Clear();
         foreach (var p in Players)
@@ -210,24 +210,35 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
 
     private bool AdvanceTurn()
     {
-        for (int i = 0; i < Players.Count; i++)
-        {
-            Turn = (Turn + 1) % Players.Count;
+            Turn = GetNextValidTurn(Turn);
             if (Board.LegalMoves(Players[Turn]).Any())
             {
                 UpdateStatus();
                 return true;
             }
-            else if (CurrentPlayers.Count == 1)
-            {
-                return false;
-            }
             else
             {
-                CurrentPlayers.Remove(Players[Turn]);
+                _eliminatedPlayers.Add(Players[Turn]);
+
+                if (Players.Count(p => !_eliminatedPlayers.Contains(p)) <= 1)
+                    return false;
+
+                AdvanceTurn();
+
+                return true;
             }
+    }
+
+    public int GetNextValidTurn(int currentTurn)
+    {
+        int next = (currentTurn + 1) % Players.Count;
+
+        while (_eliminatedPlayers.Contains(Players[next]) && next != currentTurn)
+        {
+            next = (next + 1) % Players.Count;
         }
-        return false;
+        
+        return next;
     }
 
     private bool GameOver(out string message, out IBrush brush)
@@ -248,13 +259,6 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
             brush = winnerStatus.Brush;
             return true;
         }
-        if (CurrentPlayers.Count <= 1)
-        {
-            var winnerStatus = BuildWinnerStatus();
-            message = winnerStatus.Message;
-            brush = winnerStatus.Brush;
-            return true;
-        }
 
         message = string.Empty;
         brush = Brushes.LightGray;
@@ -263,7 +267,12 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
 
     private (string Message, IBrush Brush) BuildWinnerStatus()
     {
-        var counts = CurrentPlayers.ToDictionary(p => p, p => Board.Cells.Count(c => c.Owner == p));
+        var activePlayers = Players.Where(p => !_eliminatedPlayers.Contains(p)).ToList();
+        var counts = activePlayers.ToDictionary(p => p, p => Board.Cells.Count(c => c.Owner == p));
+
+        if (!counts.Any())
+            return ("Game Over", Brushes.LightGray);
+        
         var max = counts.Values.Max();
         var winners = counts.Where(kv => kv.Value == max).Select(kv => kv.Key.Name).ToList();
         if (winners.Count == 1)
@@ -445,6 +454,7 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
         PlayersBox.SelectedItem = PlayerCount;
 
         Board = new Board(Rows, Columns);
+        _eliminatedPlayers.Clear();
         Turn = 0;
         _gameOver = false;
         BuildBoardGrid();
