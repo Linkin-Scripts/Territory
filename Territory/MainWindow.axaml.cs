@@ -71,6 +71,22 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
     public IBrush CurrentPlayerBrush { get; set; } = Brushes.LightGray;
     public bool StatusVisible { get; set; } = false;
 
+    // leaderboard entries shown in UI
+    public ObservableCollection<LeaderboardEntry> Leaderboard { get; set; } = new();
+
+    public string ScoreBoard
+    {
+        get
+        {
+            if (Board == null || Players == null)
+                return "";
+
+            var lines = Players.Select(p => $"{p.Name}: {Board.Cells.Count(c => c.Owner == p)}");
+
+            return string.Join("\n", lines);
+        }
+    }
+
     public MainWindow()
     {
         InitializeComponent();
@@ -80,6 +96,11 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
         colourConverter = new ColourConverter();
 
         DataContext = this;
+
+        var entries = LeaderboardManager.Load();
+        foreach (var e in entries)
+            Leaderboard.Add(e);
+
 
         // initialize text boxes with default sizes
         RowsBox.Text = Rows.ToString(); // Initialize RowsBox with default Rows
@@ -197,6 +218,10 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
                 UpdateStatus();
                 return true;
             }
+            else if (CurrentPlayers.Count == 1)
+            {
+                return false;
+            }
             else
             {
                 CurrentPlayers.Remove(Players[Turn]);
@@ -223,7 +248,7 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
             brush = winnerStatus.Brush;
             return true;
         }
-        if (CurrentPlayers.Count == 1)
+        if (CurrentPlayers.Count <= 1)
         {
             var winnerStatus = BuildWinnerStatus();
             message = winnerStatus.Message;
@@ -244,6 +269,18 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
         if (winners.Count == 1)
         {
             var winner = counts.First(kv => kv.Value == max).Key;
+
+            // Add to leaderboard
+            Leaderboard.Add(new LeaderboardEntry
+            {
+                PlayerName = winner.Name,
+                Score = max,
+                Date = DateTime.Now
+            });
+
+            // Save leaderboard
+            LeaderboardManager.Save(Leaderboard.ToList());
+
             return ($"{winners[0]} wins with {max} cells!", GetPlayerBrush(winner));
         }
 
@@ -453,6 +490,9 @@ public partial class MainWindow : Window, System.ComponentModel.INotifyPropertyC
 
             // make the move
             clickedCell.Owner = _currentPlayer;
+
+            OnPropertyChanged(nameof(ScoreBoard));
+
             // update button visually immediately using the player's custom color
             clickedButton.Background = (IBrush?)colourConverter.Convert(clickedCell.Owner, typeof(IBrush), null, null);
 

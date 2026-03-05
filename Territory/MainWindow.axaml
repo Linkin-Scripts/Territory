@@ -100,7 +100,7 @@
                                 <Button Name="RestartButton" Content="RESTART GAME" Click="Restart_Click" IsVisible="False" Padding="12,10" FontSize="12" FontWeight="SemiBold" Background="#C84C3A" Foreground="White" BorderThickness="0"/>
 
                                 <!-- Board and Controls -->
-                                <Grid ColumnDefinitions="* Auto" ColumnSpacing="20">
+                                <Grid ColumnDefinitions="* 150" ColumnSpacing="20">
                                         <Border Grid.Column="0" Background="#1E1E1E" BorderBrush="#2A2A2A" BorderThickness="1" Padding="8">
                                                 <Grid Name="BoardGrid" IsVisible="False" Width="350" Height="350"/>
                                         </Border>
@@ -109,6 +109,47 @@
                                                 <Button Content="SAVE" Click="SaveGame" Padding="12,10" Width="90" FontSize="11" FontWeight="SemiBold" Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#2A2A2A" BorderThickness="1"/>
                                                 <Button Content="LOAD" Click="LoadGame" Padding="12,10" Width="90" FontSize="11" FontWeight="SemiBold" Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#2A2A2A" BorderThickness="1"/>
                                         </StackPanel>
+                                        <Border Grid.Column="1"
+                                                Background="#1E1E1E"
+                                                BorderBrush="#2A2A2A"
+                                                BorderThickness="1"
+                                                Padding="10">
+
+                                                <StackPanel Spacing="10">
+
+                                                        <TextBlock Text="SCORES"
+                                                        FontWeight="Bold"
+                                                        FontSize="14"
+                                                        Foreground="White"/>
+                                                        <!-- Current Game Score -->
+                                                        <TextBlock Text="{Binding ScoreBoard}"
+                                                        FontSize="12"
+                                                        Foreground="#CCCCCC"/>
+                                                        <Separator/>
+                                                        <TextBlock Text="LEADERBOARD"
+                                                        FontWeight="Bold"
+                                                        FontSize="14"
+                                                        Foreground="White"/>
+                                                        <ItemsControl ItemsSource="{Binding Leaderboard}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                                        <TextBlock Text="{Binding PlayerName}"
+                                                                                        Width="90"/>
+                                                                                        <TextBlock Text="{Binding Score}"
+                                                                                        Width="30"/>
+                                                                                        <TextBlock Text="{Binding Date}"
+                                                                                        FontSize="10"
+                                                                                        Foreground="#AAAAAA"/>
+                                                                                </StackPanel>
+                                                                        </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+
+                                                </StackPanel>
+
+                                        </Border>
+
                                 </Grid>
                         </StackPanel>
                 </Border>
